@@ -23,9 +23,13 @@ func (f *Framework) WaitForPodToBeReady(waitedPod *v1.Pod, cluster int) *v1.Pod 
 			}
 			return false, err
 		}
+		if pod.Status.Phase == v1.PodSucceeded {
+			finalPod = pod
+			return true, nil // pods is completed
+		}
 		if pod.Status.Phase != v1.PodRunning {
 			if pod.Status.Phase != v1.PodPending {
-				return false, fmt.Errorf("expected pod to be in phase \"Pending\" or \"Running\"")
+				return false, fmt.Errorf("expected pod to be in phase \"Pending\" or \"Running\" but was %s", pod.Status.Phase)
 			}
 			return false, nil // pod is still pending
 		}
@@ -38,7 +42,7 @@ func (f *Framework) WaitForPodToBeReady(waitedPod *v1.Pod, cluster int) *v1.Pod 
 
 func (f *Framework) WaitForPodFinishStatus(waitedPod *v1.Pod, cluster int) (terminationCode int32, terminationMessage string) {
 	pc := f.ClusterClients[cluster].CoreV1().Pods(f.Namespace)
-	err := wait.PollImmediate(5*time.Second, 2*time.Minute, func() (bool, error) {
+	err := wait.PollImmediate(5*time.Second, 30*time.Second, func() (bool, error) {
 		pod, err := pc.Get(waitedPod.Name, metav1.GetOptions{})
 		if err != nil {
 			if IsTransientError(err) {

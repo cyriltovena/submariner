@@ -43,6 +43,7 @@ type Framework struct {
 	UniqueName string
 
 	ClusterClients []*kubeclientset.Clientset
+	ClusterContext []string
 
 	SkipNamespaceCreation    bool            // Whether to skip creating a namespace
 	Namespace                string          // Every test has a namespace at least unless creation is skipped
@@ -97,6 +98,7 @@ func (f *Framework) BeforeEach() {
 	for _, context := range TestContext.KubeContexts {
 		client := f.createKubernetesClient(context)
 		f.ClusterClients = append(f.ClusterClients, client)
+		f.ClusterContext = append(f.ClusterContext, context)
 	}
 
 	if !f.SkipNamespaceCreation {

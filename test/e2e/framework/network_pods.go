@@ -16,7 +16,7 @@ const (
 // create a test pod inside the current test namespace on the specified cluster.
 // The pod will listen on TestPort over TCP, send sendString over the connection,
 // and write the network response in the pod  termination log, then exit with 0 status
-func (f *Framework) CreateTCPCheckListenerPod(cluster int, sendString string) *v1.Pod {
+func (f *Framework) CreateTCPCheckListenerPod(cluster int, node string, sendString string) *v1.Pod {
 
 	tcpCheckListenerPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -26,6 +26,7 @@ func (f *Framework) CreateTCPCheckListenerPod(cluster int, sendString string) *v
 			},
 		},
 		Spec: v1.PodSpec{
+			NodeSelector:  map[string]string{},
 			RestartPolicy: v1.RestartPolicyNever,
 			Containers: []v1.Container{
 				{
@@ -43,6 +44,10 @@ func (f *Framework) CreateTCPCheckListenerPod(cluster int, sendString string) *v
 		},
 	}
 
+	if node != "" {
+		tcpCheckListenerPod.Spec.NodeSelector["kubernetes.io/hostname"] = node
+	}
+
 	pc := f.ClusterClients[cluster].CoreV1().Pods(f.Namespace)
 	tcpListenerPod, err := pc.Create(&tcpCheckListenerPod)
 	Expect(err).NotTo(HaveOccurred())
@@ -53,7 +58,7 @@ func (f *Framework) CreateTCPCheckListenerPod(cluster int, sendString string) *v
 // The pod will connect to remoteIP:TestPort over TCP, send sendString over the
 // connection, and write the network response in the pod termination log, then
 // exit with 0 status
-func (f *Framework) CreateTCPCheckConnectorPod(cluster int, remoteCheckPod *v1.Pod, remoteIP string, sendString string) *v1.Pod {
+func (f *Framework) CreateTCPCheckConnectorPod(cluster int, remoteCheckPod *v1.Pod, remoteIP string, node string, sendString string) *v1.Pod {
 
 	tcpCheckConnectorPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -63,6 +68,7 @@ func (f *Framework) CreateTCPCheckConnectorPod(cluster int, remoteCheckPod *v1.P
 			},
 		},
 		Spec: v1.PodSpec{
+			NodeSelector:  map[string]string{},
 			RestartPolicy: v1.RestartPolicyNever,
 			Containers: []v1.Container{
 				{
@@ -79,6 +85,10 @@ func (f *Framework) CreateTCPCheckConnectorPod(cluster int, remoteCheckPod *v1.P
 				},
 			},
 		},
+	}
+
+	if node != "" {
+		tcpCheckConnectorPod.Spec.NodeSelector["kubernetes.io/hostname"] = node
 	}
 
 	pc := f.ClusterClients[cluster].CoreV1().Pods(f.Namespace)

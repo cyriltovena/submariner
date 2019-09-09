@@ -17,7 +17,7 @@ func (f *Framework) CreateTCPService(cluster int, selectorName string, port int)
 
 	tcpService := v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: fmt.Sprintf("test-svc-%s", selectorName),
+			GenerateName: fmt.Sprintf("test-svc-%s-", selectorName),
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{{
