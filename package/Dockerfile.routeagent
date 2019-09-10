@@ -1,19 +1,17 @@
-FROM registry.access.redhat.com/ubi8/ubi-minimal
+FROM alpine:3.10
 
 WORKDIR /var/submariner
 
 # These are all available in the UBI8 base OS repository
-RUN microdnf -y install --nodocs iproute && \
-    microdnf clean all
+RUN apk add --update iptables ip6tables ipset iproute2 && \
+   rm -rf /var/cache/apk/*
 
 COPY submariner-route-agent.sh /usr/local/bin
 
 RUN chmod +x /usr/local/bin/submariner-route-agent.sh
 
 COPY submariner-route-agent /usr/local/bin
-# We use iptables from the host
-COPY ./iptables /usr/sbin/
-COPY ./iptables-save /usr/sbin/
+
 
 # temporary sleep infinity so that we can do our debugging
-ENTRYPOINT submariner-route-agent.sh
+ENTRYPOINT /usr/local/bin/submariner-route-agent.sh
